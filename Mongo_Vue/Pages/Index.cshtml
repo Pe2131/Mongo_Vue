@@ -1,0 +1,146 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+<section>
+    <div id="app">
+        <div class="form-inline">
+            <div class="form-group mb-2">
+                <label for="staticEmail2" class="sr-only">Email</label>
+                <input v-model="name" type="text" class="form-control" id="inputPassword2" placeholder="Team Name" name="Name">
+            </div>
+            <div class="form-group mx-sm-3 mb-2">
+                <label for="inputPassword2" class="sr-only">Password</label>
+                <input v-model="rank" name="Rank" type="text" class="form-control" id="inputPassword2" placeholder="Rank">
+            </div>
+            <button v-on:click="CreatTeams" v-if="!edit" class="btn btn-primary mb-2">Add</button>
+            <button v-on:click="UpdateTeams" v-if="edit" class="btn btn-primary mb-2">Update</button>
+
+        </div>
+        <table class="table">
+            <tr>
+                <td>#</td>
+                <td>team</td>
+                <td>Rank</td>
+                <td>Action</td>
+
+            </tr>
+            <tr v-for="(item,index) in TeamList">
+                <td>{{index+1}}</td>
+                <td>{{item.team}}</td>
+                <td>{{item.rank}}</td>
+                <td>
+                    <button class="btn btn-danger" v-on:click="DeleteItem(index,item)">Delete</button>
+                    <button class="btn btn-primary" v-on:click="Edit(index,item)">Edit</button>
+
+                </td>
+
+            </tr>
+        </table>
+    </div>
+</section>
+@section Scripts{
+    <script>
+
+        var app = new Vue({
+            el: "#app",
+            data: {
+                TeamList: [],
+                name: "",
+                rank: "",
+                id: null,
+                index: null,
+                edit: false
+            },
+            mounted: function () {
+                this.GetTeams();
+            },
+            methods: {
+                GetTeams: function () {
+                    var vm = this;
+                    $.ajax({
+                        url: "/api/Teams",
+                        method: "Get"
+                    }).done(function (data) {
+                        console.log(data);
+                        vm.TeamList = data;
+                    }).fail(function () {
+                        console.log("Error");
+                    });
+
+
+                },
+                CreatTeams: function () {
+                    var vm = this;
+                    var Teamobj = {
+                        team: this.name,
+                        rank:this.rank
+                    }
+                    $.ajax({
+                        url: "/api/Teams",
+                        method: "Post",
+                        contentType:"Application/Json",
+                        data: JSON.stringify(Teamobj)
+                    }).done(function (data) {
+                        console.log(data);
+                        vm.TeamList.splice(0, 0, Teamobj);
+                    }).fail(function () {
+                        console.log("Error");
+                    });
+                },
+                DeleteItem: function (index, item) {
+                    var vm = this;
+                    $.ajax({
+                        url: "/api/Teams",
+                        method: "Delete",
+                        contentType: "Application/Json",
+                        data: JSON.stringify(item)
+                    }).done(function (data) {
+                        console.log(data);
+                        vm.TeamList.splice(index,1);
+                    }).fail(function () {
+                        console.log("Error");
+                    });
+
+                },
+                Edit: function (index, item) {
+                    var vm = this;
+                    vm.name = item.team;
+                    vm.rank = item.rank;
+                    vm.id = item.id;
+                    vm.edit = true;
+                    vm.index = index;
+
+                },
+                UpdateTeams: function () {
+                    var vm = this;
+                    var Teamobj = {
+                        team: this.name,
+                        rank: this.rank,
+                        id: this.id,
+                    }
+                    $.ajax({
+                        url: "/api/Teams",
+                        method: "Put",
+                        contentType: "Application/Json",
+                        data: JSON.stringify(Teamobj)
+                    }).done(function (data) {
+                        console.log(data);
+                        vm.TeamList[vm.index].team = vm.name;
+                        vm.TeamList[vm.index].rank = vm.rank;
+                        vm.edit = false;
+                    }).fail(function () {
+                        console.log("Error");
+                    });
+                }
+            }
+        });
+    </script>
+
+}
